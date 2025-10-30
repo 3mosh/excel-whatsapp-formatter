@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تنسيق نص Excel للواتساب</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            width: 100%;
+            max-width: 600px;
+            direction: rtl; /* Ensure RTL for the whole container */
+        }
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+            direction: ltr; /* Input text might be mixed, better to keep LTR for pasting */
+        }
+
+        /* Base styles for the output area */
+        .output-base {
+            min-height: 100px;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            white-space: pre-wrap; /* Preserve whitespace and line breaks */
+            word-break: break-word; /* Break long words */
+            direction: rtl; /* Output should be RTL */
+            color: #1f2937; /* Default text color */
+            transition: all 0.3s ease; /* Smooth transition for style changes */
+        }
+
+        /* Styles for WhatsApp format */
+        .output-whatsapp-style {
+            background-color: #e2e8f0;
+            border: 1px solid #cbd5e1;
+        }
+
+        /* Styles for Invoice format */
+        .output-invoice-style {
+            background-color: #f9fafb; /* Lighter background for the invoice area */
+            border: 1px solid #d1d5db; /* Light gray border */
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); /* Inner shadow for depth */
+            padding: 1.5rem; /* More padding for invoice look */
+            border-radius: 0.75rem; /* Slightly more rounded corners */
+        }
+
+        .invoice-field {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.4rem 0;
+            border-bottom: 1px dashed #e5e7eb; /* Dashed line for separation */
+        }
+        .invoice-field:last-child {
+            border-bottom: none; /* No border for the last field */
+        }
+        .invoice-label {
+            font-weight: 600; /* Semi-bold for labels */
+            color: #4b5563; /* Darker gray for labels */
+        }
+        .invoice-value {
+            color: #1f2937; /* Even darker for values */
+            font-weight: 500;
+        }
+        .button-gradient {
+            background-image: linear-gradient(to right, #6366f1, #8b5cf6);
+            transition: all 0.3s ease;
+        }
+        .button-gradient:hover {
+            background-image: linear-gradient(to right, #4f46e5, #7c3aed);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .button-gradient:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+        .share-button {
+            background-color: #25d366; /* WhatsApp green */
+            transition: all 0.3s ease;
+        }
+        .share-button:hover {
+            background-color: #1da851;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .share-button:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-2xl font-bold text-gray-800 mb-4 text-center">أداة تنسيق نص Excel للواتساب</h1>
+        
+        <div class="mb-4">
+            <label for="inputText" class="block text-gray-700 text-sm font-semibold mb-2">الصق النص المشوش من Excel هنا:</label>
+            <div class="relative">
+                <textarea id="inputText" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="الصق النص هنا..."></textarea>
+                <div class="flex justify-end mt-2 space-x-2 space-x-reverse">
+                    <button id="pasteInputButton" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 text-sm">لصق</button>
+                    <button id="clearInputButton" class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-75 text-sm">مسح</button>
+                </div>
+            </div>
+        </div>
+        
+        <button id="formatButton" class="w-full button-gradient text-white font-bold py-3 px-4 rounded-lg shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-75 mb-6">
+            تنسيق النص
+        </button>
+
+        <div class="mb-4">
+            <label class="block text-gray-700 text-sm font-semibold mb-2">اختر شكل العرض:</label>
+            <div class="flex items-center space-x-4 space-x-reverse">
+                <label class="inline-flex items-center cursor-pointer">
+                    <input type="radio" name="outputFormat" value="whatsapp" class="form-radio text-indigo-600 h-4 w-4" checked>
+                    <span class="mr-2 text-gray-700">تنسيق الواتساب</span>
+                </label>
+                <label class="inline-flex items-center cursor-pointer">
+                    <input type="radio" name="outputFormat" value="invoice" class="form-radio text-indigo-600 h-4 w-4">
+                    <span class="mr-2 text-gray-700">شكل الفاتورة</span>
+                </label>
+            </div>
+        </div>
+        
+        <div class="mb-4">
+            <label for="outputArea" class="block text-gray-700 text-sm font-semibold mb-2">النص المنسق:</label>
+            <div id="outputArea" class="output-base output-whatsapp-style">
+                <!-- Formatted content will be inserted here -->
+            </div>
+            <div class="flex justify-end mt-2">
+                <button id="clearOutputButton" class="px-4 py-2 bg-gray-400 text-white rounded-md hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75 text-sm">مسح مربع النص المنسق</button>
+            </div>
+        </div>
+
+        <button id="copyButton" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-75 mb-3">
+            نسخ النص المنسق (للواتساب)
+        </button>
+
+        <button id="shareButton" class="w-full share-button text-white font-bold py-3 px-4 rounded-lg shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75">
+            مشاركة الفاتورة
+        </button>
+
+        <div id="messageBox" class="hidden mt-4 p-3 rounded-lg text-sm text-center" role="alert"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const inputText = document.getElementById('inputText');
+            const formatButton = document.getElementById('formatButton');
+            const outputArea = document.getElementById('outputArea');
+            const copyButton = document.getElementById('copyButton');
+            const shareButton = document.getElementById('shareButton');
+            const messageBox = document.getElementById('messageBox');
+            const outputFormatRadios = document.querySelectorAll('input[name="outputFormat"]');
+
+            // New buttons
+            const pasteInputButton = document.getElementById('pasteInputButton');
+            const clearInputButton = document.getElementById('clearInputButton');
+            const clearOutputButton = document.getElementById('clearOutputButton');
+
+            let currentPlainTextOutput = ''; // Stores the WhatsApp friendly text
+            let currentHtmlOutput = '';     // Stores the styled HTML invoice
+
+            // Function to display messages (instead of alert)
+            function showMessage(message, type = 'info') {
+                messageBox.textContent = message;
+                messageBox.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800', 'bg-blue-100', 'text-blue-800');
+                if (type === 'success') {
+                    messageBox.classList.add('bg-green-100', 'text-green-800');
+                } else if (type === 'error') {
+                    messageBox.classList.add('bg-red-100', 'text-red-800');
+                } else {
+                    messageBox.classList.add('bg-blue-100', 'text-blue-800');
+                }
+                setTimeout(() => {
+                    messageBox.classList.add('hidden');
+                }, 3000); // Hide after 3 seconds
+            }
+
+            // Function to parse input and generate both formats
+            function generateFormattedOutputs(input) {
+                const lines = input.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+                
+                let plainText = '';
+                let htmlText = '';
+                let parsedData = {};
+
+                if (lines.length >= 3) {
+                    // --- Parse Data ---
+                    // Line 1: 7/4/2025	لشهر	فاتورة الماء :
+                    const line1Parts = lines[0].split(/\s{2,}|\t/).filter(part => part.length > 0);
+                    let invoiceDate = 'تاريخ غير معروف';
+                    if (line1Parts.length >= 3) {
+                        invoiceDate = line1Parts[0]; // Assuming date is the first part after splitting
+                    } else {
+                        const dateMatch = lines[0].match(/\d{1,2}\/\d{1,2}\/\d{4}/);
+                        if (dateMatch) invoiceDate = dateMatch[0];
+                    }
+                    parsedData.date = invoiceDate;
+
+                    // Line 2: الاسم: انس الصلوي
+                    const nameLine = lines[1];
+                    const nameMatch = nameLine.match(/الاسم:\s*(.*)/);
+                    parsedData.customerName = nameMatch ? nameMatch[1].trim() : 'غير معروف';
+
+                    // Line 3: 9125	مع النظافه	8125	الاجمالي	5	الاستهلاك	301	ح	296	س
+                    const line3Parts = lines[2].split(/\s{2,}|\t/).filter(part => part.length > 0);
+                    
+                    if (line3Parts.length >= 10) {
+                        parsedData.sValue = line3Parts[8]; // 296
+                        parsedData.hValue = line3Parts[6]; // 301
+                        parsedData.consumptionValue = line3Parts[4]; // 5
+                        parsedData.totalValue = line3Parts[2]; // 8125
+                        parsedData.withCleaningValue = line3Parts[0]; // 9125
+                    } else {
+                        showMessage('تنسيق السطر الثالث غير متوقع. قد لا يتم التنسيق بشكل صحيح.', 'error');
+                        return { plain: '', html: '', error: true }; // Indicate error
+                    }
+
+                    // --- Generate WhatsApp Plain Text Format ---
+                    plainText += `فاتورة الماء:لشهر:${parsedData.date}\n`;
+                    plainText += `الاسم:${parsedData.customerName}\n`;
+                    plainText += `س ${parsedData.sValue} ح ${parsedData.hValue} الاستهلاك. ${parsedData.consumptionValue}  الاجمالي. ${parsedData.totalValue} مع النظافة. ${parsedData.withCleaningValue}`;
+
+                    // --- Generate HTML Invoice Format ---
+                    htmlText += `<h2 class="text-xl font-bold text-center text-gray-800 mb-4">فاتورة ماء</h2>`;
+                    htmlText += `<div class="invoice-field"><span class="invoice-label">التاريخ:</span><span class="invoice-value">${parsedData.date}</span></div>`;
+                    htmlText += `<div class="invoice-field"><span class="invoice-label">الاسم:</span><span class="invoice-value">${parsedData.customerName}</span></div>`;
+                    htmlText += `<div class="invoice-field"><span class="invoice-label">قراءة العداد (س):</span><span class="invoice-value">${parsedData.sValue}</span></div>`;
+                    htmlText += `<div class="invoice-field"><span class="invoice-label">قراءة العداد (ح):</span><span class="invoice-value">${parsedData.hValue}</span></div>`;
+                    htmlText += `<div class="invoice-field"><span class="invoice-label">الاستهلاك:</span><span class="invoice-value">${parsedData.consumptionValue}</span></div>`;
+                    htmlText += `<div class="invoice-field"><span class="invoice-label">الإجمالي:</span><span class="invoice-value">${parsedData.totalValue}</span></div>`;
+                    htmlText += `<div class="invoice-field"><span class="invoice-label">مع النظافة:</span><span class="invoice-value">${parsedData.withCleaningValue}</span></div>`;
+
+                } else {
+                    showMessage('الرجاء التأكد من أن النص يحتوي على 3 أسطر على الأقل بالتنسيق المتوقع.', 'error');
+                    return { plain: '', html: '', error: true }; // Indicate error
+                }
+                return { plain: plainText, html: htmlText, error: false };
+            }
+
+            // Function to display the correct format in the output area
+            function displayFormattedOutput() {
+                const selectedFormat = document.querySelector('input[name="outputFormat"]:checked').value;
+                outputArea.classList.remove('output-whatsapp-style', 'output-invoice-style');
+                outputArea.innerHTML = ''; // Clear content first
+
+                if (selectedFormat === 'whatsapp') {
+                    outputArea.classList.add('output-whatsapp-style');
+                    outputArea.textContent = currentPlainTextOutput;
+                } else if (selectedFormat === 'invoice') {
+                    outputArea.classList.add('output-invoice-style');
+                    outputArea.innerHTML = currentHtmlOutput;
+                }
+            }
+
+            // Event listener for format button
+            formatButton.addEventListener('click', () => {
+                const input = inputText.value.trim();
+                if (!input) {
+                    showMessage('الرجاء لصق النص أولاً.', 'error');
+                    return;
+                }
+
+                const { plain, html, error } = generateFormattedOutputs(input);
+                if (!error) {
+                    currentPlainTextOutput = plain;
+                    currentHtmlOutput = html;
+                    displayFormattedOutput();
+                } else {
+                    currentPlainTextOutput = '';
+                    currentHtmlOutput = '';
+                    outputArea.textContent = ''; // Clear output on error
+                }
+            });
+
+            // Event listener for radio button changes
+            outputFormatRadios.forEach(radio => {
+                radio.addEventListener('change', () => {
+                    if (currentPlainTextOutput || currentHtmlOutput) { // Only display if content exists
+                        displayFormattedOutput();
+                    }
+                });
+            });
+
+            // Event listener for copy button
+            copyButton.addEventListener('click', () => {
+                if (currentPlainTextOutput) {
+                    const tempTextArea = document.createElement('textarea');
+                    tempTextArea.value = currentPlainTextOutput;
+                    document.body.appendChild(tempTextArea);
+                    tempTextArea.select();
+                    try {
+                        const successful = document.execCommand('copy');
+                        if (successful) {
+                            showMessage('تم نسخ النص بنجاح!', 'success');
+                        } else {
+                            showMessage('فشل النسخ. يرجى النسخ يدويًا.', 'error');
+                        }
+                    } catch (err) {
+                        showMessage('فشل النسخ: ' + err, 'error');
+                    }
+                    document.body.removeChild(tempTextArea); // Clean up
+                } else {
+                    showMessage('لا يوجد نص لنسخه.', 'info');
+                }
+            });
+
+            // Event listener for share button
+            shareButton.addEventListener('click', async () => {
+                if (!currentPlainTextOutput) {
+                    showMessage('لا يوجد نص لمشاركته.', 'info');
+                    return;
+                }
+
+                // Check if Web Share API is available
+                if (navigator.share) {
+                    try {
+                        await navigator.share({
+                            title: 'فاتورة ماء',
+                            text: currentPlainTextOutput,
+                        });
+                        showMessage('تمت مشاركة الفاتورة بنجاح!', 'success');
+                    } catch (error) {
+                        if (error.name === 'AbortError') {
+                            showMessage('تم إلغاء المشاركة.', 'info');
+                        } else {
+                            showMessage('فشل المشاركة: ' + error.message, 'error');
+                        }
+                    }
+                } else {
+                    showMessage('متصفحك لا يدعم خاصية المشاركة المباشرة. يرجى استخدام زر النسخ.', 'info');
+                }
+            });
+
+            // Event listener for paste input button
+            pasteInputButton.addEventListener('click', async () => {
+                try {
+                    const text = await navigator.clipboard.readText();
+                    inputText.value = text;
+                    showMessage('تم لصق النص بنجاح!', 'success');
+                } catch (err) {
+                    console.error('Failed to read clipboard contents: ', err);
+                    showMessage('فشل اللصق التلقائي. يرجى لصق النص يدويًا (Ctrl+V أو الضغط المطول).', 'error');
+                }
+            });
+
+            // Event listener for clear input button
+            clearInputButton.addEventListener('click', () => {
+                inputText.value = '';
+                showMessage('تم مسح مربع الإدخال.', 'info');
+            });
+
+            // Event listener for clear output button
+            clearOutputButton.addEventListener('click', () => {
+                outputArea.innerHTML = '';
+                currentPlainTextOutput = '';
+                currentHtmlOutput = '';
+                showMessage('تم مسح مربع النص المنسق.', 'info');
+                // Reset output area style to default WhatsApp style after clearing
+                outputArea.classList.remove('output-invoice-style');
+                outputArea.classList.add('output-whatsapp-style');
+                // Also, reset the radio button selection to whatsapp if output is cleared
+                document.querySelector('input[name="outputFormat"][value="whatsapp"]').checked = true;
+            });
+        });
+    </script>
+</body>
+</html>
